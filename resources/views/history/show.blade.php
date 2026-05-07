@@ -9,7 +9,7 @@
     </a>
     <div>
         <h2 class="mb-0">Detail Riwayat Analisis</h2>
-        <p class="text-secondary mb-0">Disimpan pada {{ $session->created_at->format('d F Y, H:i') }} WIB</p>
+        <p class="text-secondary mb-0 no-print">Disimpan pada {{ $session->created_at->format('d F Y, H:i') }} WIB</p>
     </div>
 </div>
 
@@ -287,16 +287,27 @@
 
 <style>
     @media print {
-        .sidebar, .topbar, .btn-icon, .card-footer, .mb-4.d-flex .btn-light, .nav-pills {
+        @page {
+            margin: 0;
+        }
+        body {
+            padding: 2cm !important;
+        }
+        .sidebar, .topbar, .btn-icon, .card-footer, .nav-pills, #sidebar, #topbar, .no-print, footer, .footer, .print-hide {
             display: none !important;
         }
         .content {
             margin-left: 0 !important;
+            padding: 0 !important;
             padding-top: 0 !important;
         }
         .card {
+            border: none !important;
             box-shadow: none !important;
-            border: 1px solid #eee !important;
+        }
+        .table-responsive {
+            overflow: visible !important;
+            max-height: none !important;
         }
     }
     .table-success-light {
