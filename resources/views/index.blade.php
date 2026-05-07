@@ -90,7 +90,7 @@
                 <td class="px-4">
                   <div class="d-flex align-items-center">
                     <i class="ti ti-calendar me-2 text-primary"></i>
-                    {{ $analysis->created_at->format('d M Y H:i') }}
+                    {{ $analysis->created_at->format('d M Y') }}
                   </div>
                 </td>
                 <td>{{ $analysis->min_support }}%</td>

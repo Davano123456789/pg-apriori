@@ -28,7 +28,6 @@
                             <tr>
                                 <td class="px-4">
                                     <div class="fw-bold">{{ $session->created_at->format('d M Y') }}</div>
-                                    <div class="small text-secondary">{{ $session->created_at->format('H:i') }} WIB</div>
                                 </td>
                                 <td>
                                     <span class="badge bg-light text-dark border">
