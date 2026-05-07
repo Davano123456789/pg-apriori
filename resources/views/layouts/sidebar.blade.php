@@ -1,8 +1,9 @@
 <aside id="sidebar" class="sidebar">
-    <div class="logo-area">
-      <a href="{{ url('/') }}" class="d-inline-flex align-items-center text-decoration-none">
-        <span class="logo-text ms-2 fw-bold text-dark fs-4">Sistem Apriori</span>
-      </a>
+    <div class="d-flex justify-content-between align-items-center px-4 pt-3 pb-2 d-lg-none">
+        <span class="fw-bold text-primary">Menu</span>
+        <button class="btn btn-light btn-sm border-0" id="closeSidebar">
+            <i class="ti ti-x fs-4"></i>
+        </button>
     </div>
     <div class="px-4 py-3 border-bottom border-dashed mb-2">
         <div class="d-flex align-items-center gap-3">

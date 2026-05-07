@@ -17,7 +17,13 @@ class AprioriController extends Controller
 {
     public function index()
     {
-        return view('apriori.index');
+        $minDate = Transaction::min('transaction_date');
+        $maxDate = Transaction::max('transaction_date');
+
+        return view('apriori.index', [
+            'min_db_date' => $minDate ? Carbon::parse($minDate)->format('Y-m-d') : null,
+            'max_db_date' => $maxDate ? Carbon::parse($maxDate)->format('Y-m-d') : null,
+        ]);
     }
 
     public function calculate(Request $request)
@@ -66,13 +72,18 @@ class AprioriController extends Controller
         $results = $apriori->process();
 
         // 3. Pass everything to view
+        $minDate = Transaction::min('transaction_date');
+        $maxDate = Transaction::max('transaction_date');
+
         return view('apriori.index', [
             'results' => $results,
             'params' => $request->all(),
             'transformation' => $groupedTransactions, // Full data
             'matrix_items' => $topItemsForMatrix,
             'total_invoices' => count($groupedTransactions),
-            'step_by_step' => $results['step_by_step']
+            'step_by_step' => $results['step_by_step'],
+            'min_db_date' => $minDate ? Carbon::parse($minDate)->format('Y-m-d') : null,
+            'max_db_date' => $maxDate ? Carbon::parse($maxDate)->format('Y-m-d') : null,
         ]);
     }
 

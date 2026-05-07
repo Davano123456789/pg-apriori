@@ -15,12 +15,24 @@
             @csrf
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">Tanggal Mulai</label>
-                    <input type="date" name="start_date" class="form-control" value="{{ $params['start_date'] ?? '' }}" required>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label mb-0">Tanggal Mulai <small class="text-secondary">(Tgl/Bln/Thn)</small></label>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link p-0 text-primary text-decoration-none dropdown-toggle small" type="button" data-bs-toggle="dropdown">
+                                Pilih Cepat
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 small">
+                                <li><a class="dropdown-item set-date" href="#" data-start="{{ $min_db_date }}" data-end="{{ $max_db_date }}">Semua Data</a></li>
+                                <li><a class="dropdown-item set-date" href="#" data-start="{{ date('Y-01-01') }}" data-end="{{ date('Y-12-31') }}">Tahun Ini ({{ date('Y') }})</a></li>
+                                <li><a class="dropdown-item set-date" href="#" data-start="{{ date('Y-m-01') }}" data-end="{{ date('Y-m-t') }}">Bulan Ini</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <input type="text" name="start_date" id="start_date" class="form-control datepicker" value="{{ $params['start_date'] ?? '' }}" placeholder="Pilih Tanggal" required>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Tanggal Selesai</label>
-                    <input type="date" name="end_date" class="form-control" value="{{ $params['end_date'] ?? '' }}" required>
+                    <label class="form-label">Tanggal Selesai <small class="text-secondary">(Tgl/Bln/Thn)</small></label>
+                    <input type="text" name="end_date" id="end_date" class="form-control datepicker" value="{{ $params['end_date'] ?? '' }}" placeholder="Pilih Tanggal" required>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Min. Support (%)</label>
@@ -230,6 +242,7 @@
                 @endforeach
 
                 <!-- TAB: RULES -->
+                <!-- TAB: RULES -->
                 <div class="tab-pane fade" id="rules" role="tabpanel">
                     <!-- RINGKASAN DEBUG (UNTUK ANALISIS) -->
                     <div class="alert alert-light border mb-4">
@@ -239,41 +252,93 @@
                             @foreach($results['step_by_step'] as $k => $step)
                                 <li>Langkah {{ $k }} (L{{ $k }}): <strong>{{ count($step['frequent']) }}</strong> itemset yang memenuhi minimum support.</li>
                             @endforeach
+                            <li>Total Calon Aturan: <strong>{{ count($results['rules']['candidates']) }}</strong></li>
+                            <li>Aturan Lolos Seleksi: <strong>{{ count($results['rules']['final']) }}</strong></li>
                         </ul>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle border">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="px-4 py-3">Rules</th>
-                                    <th class="py-3">Support</th>
-                                    <th class="py-3" colspan="2">Confidence</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($results['rules'] as $rule)
+                    <!-- TABEL CALON ATURAN (C-RULES) -->
+                    <div class="mb-5">
+                        <h5 class="mb-3 d-flex align-items-center gap-2">
+                            <i class="ti ti-list-check text-primary"></i> Tabel Calon Aturan (C-Rules)
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border">
+                                <thead class="table-light">
                                     <tr>
-                                        <td class="px-4">
-                                            Jika membeli <strong>{{ implode(', ', $rule['antecedent_names']) }}</strong>, <br>
-                                            maka akan membeli <strong>{{ implode(', ', $rule['consequent_names']) }}</strong>
-                                        </td>
-                                        <td>{{ number_format($rule['support'], 2) }}%</td>
-                                        <td class="text-secondary small">{{ $rule['confidence_ratio'] }}</td>
-                                        <td><strong>{{ number_format($rule['confidence'], 2) }}%</strong></td>
+                                        <th class="px-4 py-3">Calon Aturan</th>
+                                        <th class="py-3">Support</th>
+                                        <th class="py-3">Confidence</th>
+                                        <th class="py-3">Min. Conf</th>
+                                        <th class="py-3 text-center">Status</th>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5 text-secondary">
-                                            Tidak ditemukan aturan yang memenuhi kriteria minimum support dan confidence.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach($results['rules']['candidates'] as $rule)
+                                        <tr class="{{ $rule['is_passed'] ? 'table-success-light' : '' }}">
+                                            <td class="px-4 py-3">
+                                                Jika membeli <strong>{{ implode(', ', $rule['antecedent_names']) }}</strong>, <br>
+                                                maka akan membeli <strong>{{ implode(', ', $rule['consequent_names']) }}</strong>
+                                            </td>
+                                            <td>{{ number_format($rule['support'], 2) }}%</td>
+                                            <td>
+                                                <div class="small text-secondary mb-1">{{ $rule['confidence_ratio'] }}</div>
+                                                <strong>{{ number_format($rule['confidence'], 2) }}%</strong>
+                                            </td>
+                                            <td class="text-secondary">{{ number_format($params['min_confidence'], 2) }}%</td>
+                                            <td class="text-center">
+                                                @if($rule['is_passed'])
+                                                    <span class="badge bg-success px-3">Lolos</span>
+                                                @else
+                                                    <span class="badge bg-light text-secondary px-3">Gagal</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    @if(!empty($results['rules']))
+                    <!-- TABEL HASIL SELEKSI ATURAN (FINAL RULES) -->
+                    <div>
+                        <h5 class="mb-3 d-flex align-items-center gap-2 text-success">
+                            <i class="ti ti-discount-check"></i> Hasil Seleksi Aturan Asosiasi (Final Rules)
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border shadow-sm">
+                                <thead class="bg-success text-white">
+                                    <tr>
+                                        <th class="px-4 py-3">Pola Aturan (Rules)</th>
+                                        <th class="py-3">Support</th>
+                                        <th class="py-3">Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($results['rules']['final'] as $rule)
+                                        <tr>
+                                            <td class="px-4 py-3">
+                                                <i class="ti ti-arrow-right text-success me-2"></i>
+                                                Jika membeli <strong>{{ implode(', ', $rule['antecedent_names']) }}</strong>, 
+                                                maka akan membeli <strong>{{ implode(', ', $rule['consequent_names']) }}</strong>
+                                            </td>
+                                            <td>{{ number_format($rule['support'], 2) }}%</td>
+                                            <td><span class="badge bg-success-light text-success fs-6">{{ number_format($rule['confidence'], 2) }}%</span></td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center py-5 text-secondary">
+                                                <i class="ti ti-mood-empty fs-1 d-block mb-2"></i>
+                                                Tidak ada aturan yang lolos kriteria seleksi.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    @if(!empty($results['rules']['final']))
                         <div class="mt-4 text-end">
                             <form action="{{ route('apriori.store') }}" method="POST">
                                 @csrf
@@ -282,11 +347,11 @@
                                 <input type="hidden" name="min_support" value="{{ $params['min_support'] }}">
                                 <input type="hidden" name="min_confidence" value="{{ $params['min_confidence'] }}">
                                 <input type="hidden" name="total_transactions" value="{{ $results['total_transactions'] }}">
-                                <input type="hidden" name="results" value="{{ json_encode($results['rules']) }}">
+                                <input type="hidden" name="results" value="{{ json_encode($results['rules']['final']) }}">
                                 <input type="hidden" name="step_by_step_data" value="{{ json_encode($results['step_by_step']) }}">
                                 <input type="hidden" name="transformation_data" value="{{ json_encode($transformation) }}">
-                                <button type="submit" class="btn btn-success px-4 py-2">
-                                    <i class="ti ti-device-floppy"></i> Simpan Hasil ke Riwayat
+                                <button type="submit" class="btn btn-success px-5 py-3 fw-bold">
+                                    <i class="ti ti-device-floppy fs-5 me-2"></i> Simpan Hasil ke Riwayat Analisis
                                 </button>
                             </form>
                         </div>
@@ -299,6 +364,34 @@
 @endsection
 
 @push('scripts')
+<script>
+    $(document).ready(function() {
+        // Initialize Flatpickr
+        const fpStart = flatpickr("#start_date", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            allowInput: true
+        });
+        const fpEnd = flatpickr("#end_date", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            allowInput: true
+        });
+
+        $('.set-date').on('click', function(e) {
+            e.preventDefault();
+            let start = $(this).data('start');
+            let end = $(this).data('end');
+            
+            if (start && end) {
+                fpStart.setDate(start);
+                fpEnd.setDate(end);
+            }
+        });
+    });
+</script>
 <style>
     .table-success-light {
         background-color: rgba(25, 135, 84, 0.05);

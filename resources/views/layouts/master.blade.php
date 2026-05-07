@@ -15,6 +15,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <style>
     body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; }
@@ -26,10 +28,15 @@
     .nav-link:hover { background: #f8f9fa; }
     .logo-area { position: fixed; top: 0; left: 0; width: 250px; height: 70px; display: flex; align-items: center; padding: 0 20px; background: #fff; z-index: 1100; border-right: 1px solid #eee; border-bottom: 1px solid #eee; }
     .avatar { object-fit: cover; }
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; }
+    .sidebar.show { transform: translateX(0); z-index: 1100; padding-top: 20px; }
     @media (max-width: 991.98px) {
-      .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; z-index: 1100; padding-top: 20px; }
       .content { margin-left: 0; }
+      .overlay.show { display: block; }
+      .topbar-toggle { display: block !important; }
     }
+    .topbar-toggle { display: none; }
   </style>
 
   @stack('styles')
@@ -39,8 +46,16 @@
   <div id="overlay" class="overlay"></div>
   <!-- TOPBAR -->
   <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
-    <div class="ms-auto">
-      <!-- Right side empty as icons are removed -->
+    <div class="container-fluid">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-light border-0 me-2 topbar-toggle" id="sidebarToggle">
+          <i class="ti ti-menu-2 fs-4"></i>
+        </button>
+        <a href="{{ url('/') }}" class="navbar-brand fw-bold text-dark fs-4 m-0">Palu Gada</a>
+      </div>
+      <div class="ms-auto">
+        <!-- Right side empty -->
+      </div>
     </div>
   </nav>
 
@@ -110,6 +125,11 @@
           confirmButtonText: 'Oke'
         });
       @endif
+      // Sidebar Toggle Logic
+      $('#sidebarToggle, #closeSidebar, #overlay').on('click', function() {
+        $('.sidebar').toggleClass('show');
+        $('#overlay').toggleClass('show');
+      });
     });
   </script>
   @stack('scripts')

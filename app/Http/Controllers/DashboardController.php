@@ -16,7 +16,7 @@ class DashboardController extends Controller
 
         $recentAnalyses = AnalysisSession::withCount('results')
             ->latest()
-            ->take(5)
+            ->take(2)
             ->get();
 
         return view('index', compact('totalTransaksi', 'totalProduk', 'totalAnalisis', 'recentAnalyses'));

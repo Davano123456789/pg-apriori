@@ -3,19 +3,19 @@
 @section('title', 'Data Transaksi')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 w-100">
     <div>
         <h2 class="mb-0">Data Transaksi</h2>
-        <p class="text-secondary">Daftar seluruh transaksi yang telah diupload</p>
+        <p class="text-secondary mb-0">Daftar seluruh transaksi yang telah diupload</p>
     </div>
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#uploadModal">
+    <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto justify-content-md-end">
+        <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#uploadModal">
             <i class="ti ti-upload"></i> Upload Excel
         </button>
-        <form action="{{ route('transactions.truncate') }}" method="POST" class="truncate-form">
+        <form action="{{ route('transactions.truncate') }}" method="POST" class="truncate-form m-0">
             @csrf
             @method('DELETE')
-            <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-2 btn-truncate">
+            <button type="button" class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 btn-truncate w-100">
                 <i class="ti ti-trash"></i> Kosongkan Data
             </button>
         </form>

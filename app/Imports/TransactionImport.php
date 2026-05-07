@@ -23,14 +23,19 @@ class TransactionImport implements ToModel, WithHeadingRow
         }
 
         // Handle date (Excel dates can be serial numbers)
-        $date = $row['tanggal'];
-        if (is_numeric($date)) {
-            $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date);
+        $dateValue = $row['tanggal'];
+        if (is_numeric($dateValue)) {
+            $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($dateValue);
         } else {
             try {
-                $date = Carbon::parse($date);
+                // Try d/m/Y first as it is common in Indonesia/Excel
+                $date = Carbon::createFromFormat('d/m/Y', $dateValue);
             } catch (\Exception $e) {
-                $date = now();
+                try {
+                    $date = Carbon::parse($dateValue);
+                } catch (\Exception $e2) {
+                    $date = now();
+                }
             }
         }
 

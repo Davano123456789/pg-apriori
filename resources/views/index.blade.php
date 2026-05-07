@@ -70,7 +70,7 @@
     <div class="card">
       <div class="card-header bg-transparent px-4 py-3 d-flex justify-content-between align-items-center">
         <h3 class="h5 mb-0">Riwayat Analisis Terakhir</h3>
-        <a href="#" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+        <a href="{{ route('history.index') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -101,7 +101,7 @@
                   </span>
                 </td>
                 <td class="px-4">
-                  <a href="#" class="btn btn-sm btn-primary">
+                  <a href="{{ route('history.show', $analysis->id) }}" class="btn btn-sm btn-primary">
                     <i class="ti ti-eye me-1"></i> Detail
                   </a>
                 </td>
