@@ -20,6 +20,7 @@
                             <th class="py-3 text-center">Min. Support</th>
                             <th class="py-3 text-center">Min. Confidence</th>
                             <th class="py-3 text-center">Jumlah Aturan</th>
+                            <th class="py-3">Dijalankan Oleh</th>
                             <th class="py-3 text-end px-4">Aksi</th>
                         </tr>
                     </thead>
@@ -41,6 +42,14 @@
                                     <span class="badge bg-primary-subtle text-primary">{{ $session->results_count }}
                                         Aturan</span>
                                 </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded-circle p-1 me-2">
+                                            <i class="ti ti-user fs-5 text-secondary"></i>
+                                        </div>
+                                        <span class="text-secondary small">{{ $session->user->name ?? 'Sistem' }}</span>
+                                    </div>
+                                </td>
                                 <td class="text-end px-4">
                                     <div class="d-flex justify-content-end gap-2">
                                         <a href="{{ route('history.show', $session->id) }}"
@@ -60,7 +69,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-secondary">
+                                <td colspan="7" class="text-center py-5 text-secondary">
                                     <i class="ti ti-history fs-1 d-block mb-2"></i>
                                     Belum ada riwayat analisis yang disimpan.
                                 </td>

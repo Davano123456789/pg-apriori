@@ -350,6 +350,7 @@
                                 <input type="hidden" name="results" value="{{ json_encode($results['rules']['final']) }}">
                                 <input type="hidden" name="step_by_step_data" value="{{ json_encode($results['step_by_step']) }}">
                                 <input type="hidden" name="transformation_data" value="{{ json_encode($transformation) }}">
+                                <input type="hidden" name="transaction_ids" value="{{ json_encode($transaction_ids) }}">
                                 <button type="submit" class="btn btn-success px-5 py-3 fw-bold">
                                     <i class="ti ti-device-floppy fs-5 me-2"></i> Simpan Hasil ke Riwayat Analisis
                                 </button>

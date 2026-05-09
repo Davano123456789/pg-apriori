@@ -31,7 +31,7 @@ class TransactionController extends Controller
 
     public function truncate()
     {
-        Transaction::truncate();
+        Transaction::query()->delete();
         return back()->with('success', 'Semua data transaksi telah dihapus!');
     }
 }

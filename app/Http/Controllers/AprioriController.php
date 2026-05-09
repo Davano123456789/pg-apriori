@@ -43,6 +43,8 @@ class AprioriController extends Controller
         // 1. Get transactions grouped by invoice - STRICT DATE FILTER
         $rawTransactions = Transaction::whereBetween('transaction_date', [$startDate, $endDate])
             ->get();
+        
+        $transactionIds = $rawTransactions->pluck('id')->toArray();
 
         if ($rawTransactions->isEmpty()) {
             return back()->with('error', 'Tidak ada data transaksi pada rentang tanggal tersebut.');
@@ -84,6 +86,7 @@ class AprioriController extends Controller
             'step_by_step' => $results['step_by_step'],
             'min_db_date' => $minDate ? Carbon::parse($minDate)->format('Y-m-d') : null,
             'max_db_date' => $maxDate ? Carbon::parse($maxDate)->format('Y-m-d') : null,
+            'transaction_ids' => $transactionIds,
         ]);
     }
 
@@ -96,7 +99,8 @@ class AprioriController extends Controller
             'min_confidence' => 'required',
             'results' => 'required|json',
             'step_by_step_data' => 'nullable|json',
-            'transformation_data' => 'nullable|json'
+            'transformation_data' => 'nullable|json',
+            'transaction_ids' => 'nullable|json'
         ]);
 
         $results = json_decode($request->results, true);
@@ -107,12 +111,19 @@ class AprioriController extends Controller
 
         DB::transaction(function () use ($request, $results) {
             $session = AnalysisSession::create([
+                'user_id' => auth()->id(),
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'min_support' => $request->min_support,
                 'min_confidence' => $request->min_confidence,
                 'total_transactions' => $request->total_transactions ?? 0,
             ]);
+
+            // Save Many-to-Many Relationships (Pivot Table)
+            $transactionIds = json_decode($request->transaction_ids, true);
+            if ($transactionIds) {
+                $session->transactions()->sync($transactionIds);
+            }
 
             // Save Transformations
             $transformationData = json_decode($request->transformation_data, true);
