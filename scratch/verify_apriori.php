@@ -5,61 +5,62 @@ use Illuminate\Support\Facades\DB;
 
 require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
-$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-// 1. Get all transactions grouped by invoice
-$transactions = Transaction::select('invoice_no', 'item_code')
+$items = ['968', '1152', '1155'];
+
+// Total unique invoices
+$totalInvoices = Transaction::distinct('invoice_no')->count('invoice_no');
+
+// Invoices containing all three
+$countAllThree = Transaction::select('invoice_no')
+    ->whereIn('item_code', $items)
+    ->groupBy('invoice_no')
+    ->havingRaw('COUNT(DISTINCT item_code) = 3')
     ->get()
-    ->groupBy('invoice_no');
+    ->count();
 
-$totalInvoices = $transactions->count();
-echo "Total Invoices: " . $totalInvoices . "\n\n";
+$support = ($countAllThree / $totalInvoices) * 100;
 
-$pairCounts = [];
-$tripleCounts = [];
+echo "Total Unique Invoices: $totalInvoices\n";
+echo "Count for {968, 1152, 1155}: $countAllThree\n";
+echo "Support: " . number_format($support, 4) . "%\n";
 
-foreach ($transactions as $invoiceNo => $items) {
-    $itemCodes = $items->pluck('item_code')->unique()->values()->toArray();
-    sort($itemCodes);
-    
-    $count = count($itemCodes);
-    
-    // 2-Itemsets
-    for ($i = 0; $i < $count; $i++) {
-        for ($j = $i + 1; $j < $count; $j++) {
-            $pair = $itemCodes[$i] . ', ' . $itemCodes[$j];
-            if (!isset($pairCounts[$pair])) {
-                $pairCounts[$pair] = 0;
-            }
-            $pairCounts[$pair]++;
-            
-            // 3-Itemsets
-            for ($k = $j + 1; $k < $count; $k++) {
-                $triple = $itemCodes[$i] . ', ' . $itemCodes[$j] . ', ' . $itemCodes[$k];
-                if (!isset($tripleCounts[$triple])) {
-                    $tripleCounts[$triple] = 0;
-                }
-                $tripleCounts[$triple]++;
-            }
-        }
-    }
+// Confidence {968, 1152} -> {1155}
+$countSub = Transaction::select('invoice_no')
+    ->whereIn('item_code', ['968', '1152'])
+    ->groupBy('invoice_no')
+    ->havingRaw('COUNT(DISTINCT item_code) = 2')
+    ->get()
+    ->count();
+
+if ($countSub > 0) {
+    $confidence = ($countAllThree / $countSub) * 100;
+    echo "Confidence {968, 1152} -> {1155}: " . number_format($confidence, 2) . "% ($countAllThree / $countSub)\n";
 }
 
-arsort($pairCounts);
-arsort($tripleCounts);
+// Confidence {968, 1155} -> {1152}
+$countSub2 = Transaction::select('invoice_no')
+    ->whereIn('item_code', ['968', '1155'])
+    ->groupBy('invoice_no')
+    ->havingRaw('COUNT(DISTINCT item_code) = 2')
+    ->get()
+    ->count();
 
-echo "2-ITEMSET FREQUENCIES:\n";
-foreach ($pairCounts as $pair => $count) {
-    if ($count >= 1) {
-        $support = ($count / $totalInvoices) * 100;
-        echo "- [" . $pair . "]: " . $count . " times (" . number_format($support, 2) . "%)\n";
-    }
+if ($countSub2 > 0) {
+    $confidence2 = ($countAllThree / $countSub2) * 100;
+    echo "Confidence {968, 1155} -> {1152}: " . number_format($confidence2, 2) . "% ($countAllThree / $countSub2)\n";
 }
 
-echo "\n3-ITEMSET FREQUENCIES (Count >= 2):\n";
-foreach ($tripleCounts as $triple => $count) {
-    if ($count >= 2) {
-        $support = ($count / $totalInvoices) * 100;
-        echo "- [" . $triple . "]: " . $count . " times (" . number_format($support, 2) . "%)\n";
-    }
+// Confidence {1152, 1155} -> {968}
+$countSub3 = Transaction::select('invoice_no')
+    ->whereIn('item_code', ['1152', '1155'])
+    ->groupBy('invoice_no')
+    ->havingRaw('COUNT(DISTINCT item_code) = 2')
+    ->get()
+    ->count();
+
+if ($countSub3 > 0) {
+    $confidence3 = ($countAllThree / $countSub3) * 100;
+    echo "Confidence {1152, 1155} -> {968}: " . number_format($confidence3, 2) . "% ($countAllThree / $countSub3)\n";
 }

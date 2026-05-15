@@ -184,65 +184,65 @@ class AprioriService
     private function generateRules()
     {
         $allPossibleRules = [];
-        // Rules can only be generated from itemsets with k >= 2
+        
+        // 1. Find the highest k that has frequent itemsets
+        $maxK = 0;
         foreach ($this->frequentItemsets as $k => $itemsets) {
-            if ($k < 2) continue;
-
-            foreach ($itemsets as $itemKey => $supportCount) {
-                $itemset = explode(',', $itemKey);
-                $subsets = $this->getPowerSet($itemset);
-
-                foreach ($subsets as $antecedent) {
-                    if (empty($antecedent) || count($antecedent) == count($itemset)) continue;
-
-                    $antecedentKey = $this->getItemsetKey($antecedent);
-                    $consequent = array_values(array_diff($itemset, $antecedent));
-                    $consequentKey = $this->getItemsetKey($consequent);
-                    
-                    // Support(A union B)
-                    $supportCountAB = $supportCount;
-                    
-                    // Support(A)
-                    $supportCountA = $this->frequentItemsets[count($antecedent)][$antecedentKey] ?? 0;
-
-                    if ($supportCountA > 0) {
-                        $confidence = ($supportCountAB / $supportCountA) * 100;
-                        $supportPercent = ($supportCountAB / $this->totalTransactions) * 100;
-                        
-                        $allPossibleRules[] = [
-                            'itemset_key' => $itemKey,
-                            'antecedent' => $antecedent,
-                            'consequent' => $consequent,
-                            'support' => $supportPercent,
-                            'confidence' => $confidence,
-                            'is_passed' => $confidence >= ($this->minConfidence * 100),
-                            'confidence_ratio' => $supportCountAB . '/' . $supportCountA,
-                            'antecedent_names' => array_map(fn($code) => $this->itemNames[$code] ?? $code, $antecedent),
-                            'consequent_names' => array_map(fn($code) => $this->itemNames[$code] ?? $code, $consequent),
-                        ];
-                    }
-                }
+            if ($k >= 2 && !empty($itemsets)) {
+                $maxK = max($maxK, $k);
             }
         }
 
-        // Deduplicate: Pick the rule that matches the report's convention (Antecedent = all items except last, Consequent = last item)
-        $candidateRules = [];
-        foreach ($allPossibleRules as $rule) {
-            $key = $rule['itemset_key'];
-            $items = explode(',', $key);
-            $lastItem = end($items);
+        if ($maxK === 0) {
+            return [
+                'candidates' => [],
+                'final' => []
+            ];
+        }
+
+        // 2. Generate rules ONLY from the highest level (maxK)
+        $itemsets = $this->frequentItemsets[$maxK];
+        foreach ($itemsets as $itemKey => $supportCount) {
+            $itemset = explode(',', $itemKey);
             
-            // Check if this rule's consequent is the last item in the sorted set
-            if (count($rule['consequent']) === 1 && $rule['consequent'][0] === $lastItem) {
-                $candidateRules[$key] = $rule;
+            // "One direction" logic: 
+            // Antecedent = all items except the last one
+            // Consequent = the last item
+            $antecedent = array_slice($itemset, 0, $maxK - 1);
+            $consequent = [end($itemset)];
+
+            $antecedentKey = $this->getItemsetKey($antecedent);
+            $consequentKey = $this->getItemsetKey($consequent);
+            
+            // Support(A union B)
+            $supportCountAB = $supportCount;
+            
+            // Support(A)
+            $supportCountA = $this->frequentItemsets[count($antecedent)][$antecedentKey] ?? 0;
+
+            if ($supportCountA > 0) {
+                $confidence = ($supportCountAB / $supportCountA) * 100;
+                $supportPercent = ($supportCountAB / $this->totalTransactions) * 100;
+                
+                $allPossibleRules[] = [
+                    'itemset_key' => $itemKey,
+                    'antecedent' => $antecedent,
+                    'consequent' => $consequent,
+                    'support' => $supportPercent,
+                    'confidence' => $confidence,
+                    'is_passed' => $confidence >= ($this->minConfidence * 100),
+                    'confidence_ratio' => $supportCountAB . '/' . $supportCountA,
+                    'antecedent_names' => array_map(fn($code) => $this->itemNames[$code] ?? $code, $antecedent),
+                    'consequent_names' => array_map(fn($code) => $this->itemNames[$code] ?? $code, $consequent),
+                ];
             }
         }
 
         // Final Rules are only the ones that passed
-        $finalRules = array_filter($candidateRules, fn($rule) => $rule['is_passed']);
+        $finalRules = array_filter($allPossibleRules, fn($rule) => $rule['is_passed']);
 
         return [
-            'candidates' => array_values($candidateRules),
+            'candidates' => array_values($allPossibleRules),
             'final' => array_values($finalRules)
         ];
     }
